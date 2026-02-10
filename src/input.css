@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos personalizados de LIDIUM
+   Se compilarán junto con Tailwind.
+*/
+
+@layer components {
+    .cta-gradient { 
+        @apply bg-gradient-to-r from-[#481262] to-[#7732a8];
+    }
+
+    .hero-gradient {
+        background: linear-gradient(135deg, #fcfcfc 0%, #e0e0e0 100%);
+    }
+
+    /* Navegación y Scroll */
+    .nav-scrolled { 
+        background-color: rgba(252, 252, 252, 0.15); 
+        backdrop-filter: blur(16px); 
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05); 
+    }
+
+    .nav-link { 
+        @apply relative pb-1.5 text-gray-600 transition-colors duration-300 hover:text-[#7732a8];
+    }
+
+    .nav-link::after { 
+        content: ''; 
+        @apply absolute w-0 h-0.5 bg-[#7732a8] bottom-0 left-1/2 -translate-x-1/2 transition-all duration-300 ease-out;
+    }
+
+    .nav-link:hover::after { 
+        @apply w-full;
+    }
+
+    /* Estilos para modo oscuro (Footer/Secciones oscuras) */
+    .nav-on-dark .nav-link { 
+        @apply text-white hover:text-gray-300;
+    }
+    .nav-on-dark .nav-link::after { 
+        @apply bg-white;
+    }
+    .nav-on-dark #mobile-menu-button { 
+        @apply text-white;
+    }
+    .nav-on-dark .logo-svg .cls-1,
+    .nav-on-dark .logo-svg .cls-2 { 
+       @apply fill-white; 
+    }
+
+    /* WPForms Overrides (Usando @apply para limpiar el CSS) */
+    div.wpforms-container-full .wpforms-form .wpforms-field input,
+    div.wpforms-container-full .wpforms-form .wpforms-field textarea,
+    div.wpforms-container-full .wpforms-form .wpforms-field select {
+        @apply rounded-lg border-gray-300 py-3 px-4 focus:border-[#7732a8] focus:ring-[#7732a8] !important;
+    }
+
+    div.wpforms-container-full .wpforms-form .wpforms-submit {
+        @apply bg-[#7732a8] text-white font-semibold rounded-lg py-3 px-6 w-full hover:bg-[#481262] transition-colors !important;
+    }
+    
+    /* Paginación */
+    .pagination-container .page-numbers {
+        @apply flex justify-center items-center gap-2;
+    }
+    .pagination-container .page-numbers a,
+    .pagination-container .page-numbers span.page-numbers {
+        @apply flex items-center justify-center h-10 min-w-[2.5rem] px-4 rounded-lg font-semibold border border-gray-200 bg-white text-[#1f1f1f] hover:bg-gray-100 no-underline transition-all;
+    }
+    .pagination-container .page-numbers span.current {
+        @apply bg-[#7732a8] text-white border-[#7732a8];
+    }
+}
+
+/* Utilidades extra */
+.accordion-content { 
+    max-height: 0; 
+    overflow: hidden; 
+    transition: max-height 0.3s ease-out; 
+}
