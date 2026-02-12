@@ -9,15 +9,24 @@ Template Name: Landing Page Template
     <meta charset="<?php bloginfo( 'charset' ); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php wp_title('|', true, 'right'); bloginfo('name'); ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- 1. PRELOADS CRÍTICOS (CSS y Fuentes) -->
+    <?php 
+    $css_path = get_template_directory() . '/dist/output.css';
+    $css_ver = file_exists($css_path) ? filemtime($css_path) : '1.0';
+    ?>
+    <link rel="preload" href="<?php echo get_template_directory_uri(); ?>/dist/output.css?ver=<?php echo $css_ver; ?>" as="style">
+    <link rel="preload" href="<?php echo get_template_directory_uri(); ?>/fonts/inter-v20-latin-800.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="<?php echo get_template_directory_uri(); ?>/fonts/inter-v20-latin-700.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="<?php echo get_template_directory_uri(); ?>/fonts/inter-v20-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
+
+    <!-- Estilos críticos para evitar FOUC y WPForms -->
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f7f7fa; color: #1f1f1f; }
         .logo-svg .cls-1 { fill: #c0c1c1; }
         .logo-svg .cls-2 { fill: #7b378b; }
-        /* WPForms styles to match the design */
+        
+        /* WPForms styles */
         div.wpforms-container-full .wpforms-form .wpforms-field-label { display: none !important; }
         div.wpforms-container-full .wpforms-form .wpforms-field input[type=text],
         div.wpforms-container-full .wpforms-form .wpforms-field input[type=email] {
@@ -51,7 +60,14 @@ Template Name: Landing Page Template
                 
                 <!-- Left Side: Content -->
                 <div class="bg-gray-50 p-8 sm:p-12 h-full flex flex-col justify-center">
-                    <h1 class="text-4xl lg:text-5xl font-extrabold text-[#1f1f1f] leading-tight"><?php echo get_field('landing_title'); ?></h1>
+                    <!-- OPTIMIZACIÓN LCP: 
+                         Estilos inline para evitar esperar al CSS externo. 
+                         'content-visibility: auto' mejora el renderizado.
+                    -->
+                    <h1 class="text-4xl lg:text-5xl font-extrabold text-[#1f1f1f] leading-tight"
+                        style="color: #1f1f1f; font-family: 'Inter', sans-serif; font-weight: 800; visibility: visible;">
+                        <?php echo get_field('landing_title'); ?>
+                    </h1>
                     <p class="mt-4 text-lg text-gray-600"><?php the_field('landing_subtitle'); ?></p>
                     
                     <ul class="mt-8 space-y-6">
@@ -61,11 +77,14 @@ Template Name: Landing Page Template
                             if( $benefit && !empty($benefit['title']) ): 
                         ?>
                         <li class="flex items-start">
-                            <div class="flex-shrink-0 bg-purple-100 rounded-lg p-2">
-                                <?php echo $benefit['icon']; ?>
+                            <div class="flex-shrink-0 bg-purple-100 rounded-lg p-2 text-[#7732a8]">
+                                <!-- Asegurar que el SVG no se rompa -->
+                                <div style="width: 24px; height: 24px;">
+                                    <?php echo $benefit['icon']; ?>
+                                </div>
                             </div>
                             <div class="ml-4">
-                                <h4 class="text-lg font-bold"><?php echo esc_html($benefit['title']); ?></h4>
+                                <h4 class="text-lg font-bold text-[#1f1f1f]"><?php echo esc_html($benefit['title']); ?></h4>
                                 <p class="text-gray-600"><?php echo esc_html($benefit['description']); ?></p>
                             </div>
                         </li>
@@ -80,7 +99,12 @@ Template Name: Landing Page Template
                 <div id="form-wrapper" class="bg-white p-8 sm:p-12 h-full flex flex-col justify-center">
                     <div id="form-container">
                         <?php $landing_image = get_field('landing_image'); if($landing_image): ?>
-                            <img src="<?php echo esc_url($landing_image['url']); ?>" alt="<?php echo esc_attr($landing_image['alt']); ?>" class="w-full h-auto rounded-lg shadow-md mb-8">
+                            <!-- Prioridad Alta para la imagen (LCP en móvil) -->
+                            <img src="<?php echo esc_url($landing_image['url']); ?>" 
+                                 alt="<?php echo esc_attr($landing_image['alt']); ?>" 
+                                 class="w-full h-auto rounded-lg shadow-md mb-8"
+                                 fetchpriority="high"
+                                 loading="eager">
                         <?php endif; ?>
                        
                         <h3 class="text-2xl font-bold text-[#1f1f1f] text-center mt-8"><?php the_field('landing_form_title'); ?></h3>
@@ -98,8 +122,6 @@ Template Name: Landing Page Template
                             </p>
                         </div>
                     </div>
-
-                   
                 </div>
 
             </div>
@@ -113,4 +135,3 @@ Template Name: Landing Page Template
     <?php wp_footer(); ?>
 </body>
 </html>
-
