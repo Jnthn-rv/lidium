@@ -14,11 +14,19 @@ require_once LIDIUM_DIR . '/inc/cleanup.php';
 
 // 2. Cargar configuración de Scripts y Estilos
 function lidium_theme_scripts() {
-    // Tailwind CSS Play CDN (NOTA: Para producción real, se recomienda compilar el CSS)
-    wp_enqueue_script('tailwindcss', 'https://cdn.tailwindcss.com', array(), null, false);
+   
+  
+        //Cargar el CSS compilado de Tailwind (Producción)
+    $css_file_path = get_template_directory() . '/dist/output.css';
+    $css_file_uri = get_template_directory_uri() . '/dist/output.css';
     
-    // Google Fonts
-    wp_enqueue_style('google-fonts', 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap', array(), null);
+    if (file_exists($css_file_path)) {
+        // Cargamos el CSS compilado. Nota que 'lidium-style' ya no es necesario si todo está aquí.
+        wp_enqueue_style('lidium-tailwind', $css_file_uri, array(), filemtime($css_file_path));
+    } else {
+        // Fallback por si no has compilado: Cargar style.css normal
+        wp_enqueue_style('lidium-style', get_stylesheet_uri(), array(), '1.0.0');
+    }
     
     // Estilos principales
     wp_enqueue_style('lidium-style', get_stylesheet_uri(), array(), LIDIUM_VERSION);
@@ -84,3 +92,51 @@ if( function_exists('acf_add_options_page') ) {
         'redirect'      => false
     ));
 }
+
+/**
+ * OPTIMIZACIÓN AGRESIVA PARA PÁGINAS LIGERAS (Bio & Landing)
+ * Elimina scripts que bloquean el renderizado en páginas de alta conversión.
+ */
+function lidium_cleanup_lightweight_pages() {
+    // Ejecutar si es Link in Bio O la Landing Page
+    if ( is_page_template('template-linkinbio.php') || is_page_template('template-landing.php') ) {
+        
+        // 1. ELIMINAR EL CULPABLE (SureTriggers)
+        wp_dequeue_script('st-trigger-button'); 
+        wp_deregister_script('st-trigger-button');
+        wp_dequeue_style('st-trigger-button');
+        wp_deregister_style('st-trigger-button');
+
+        // 2. Eliminar estilos de Bloques de Gutenberg (No necesarios aquí)
+        wp_dequeue_style('wp-block-library');
+        wp_dequeue_style('wp-block-library-theme');
+        wp_dequeue_style('global-styles'); 
+        
+        // 3. Eliminar Contact Form 7 Scripts (si usas WPForms aquí, CF7 sobra)
+        if ( function_exists( 'wpcf7_enqueue_scripts' ) ) {
+            wp_dequeue_script('contact-form-7');
+            wp_dequeue_style('contact-form-7');
+        }
+        
+        // 4. Eliminar Emojis
+        remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
+        remove_action( 'wp_print_styles', 'print_emoji_styles' );
+    }
+}
+// Prioridad 100 para asegurar que corre después de los plugins
+add_action('wp_enqueue_scripts', 'lidium_cleanup_lightweight_pages', 100);
+
+/**
+ * Añadir atributo 'defer' a scripts no críticos para mejorar carga.
+ */
+function lidium_defer_scripts( $tag, $handle, $src ) {
+    // Lista de scripts a diferir (custom.js y otros que no sean jQuery core si lo usas)
+    $defer_scripts = array( 'lidium-custom-js' );
+
+    if ( in_array( $handle, $defer_scripts ) ) {
+        return '<script src="' . esc_url( $src ) . '" defer="defer"></script>';
+    }
+    
+    return $tag;
+}
+add_filter( 'script_loader_tag', 'lidium_defer_scripts', 10, 3 );
